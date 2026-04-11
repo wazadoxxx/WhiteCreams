@@ -5,7 +5,7 @@ const totalDrugsEl = document.getElementById('totalDrugs');
 const totalHeistsEl = document.getElementById('totalHeists');
 const recentHeistsBody = document.getElementById('recentHeistsBody');
 const logoutButton = document.getElementById('logoutButton');
-const API_BASE_URL = '/api/...';
+const API_BASE_URL = window.__API_BASE_URL__ || '';
 
 const authToken = localStorage.getItem('authToken');
 const authUserRaw = localStorage.getItem('authUser');

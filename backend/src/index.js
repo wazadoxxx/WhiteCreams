@@ -3,16 +3,22 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const fs = require('fs');
 const path = require('path');
-const db = require('./config/db');
-const healthRoutes = require('./routes/health');
 
 dotenv.config();
 
+const db = require('./config/db');
+const healthRoutes = require('./routes/health');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
-const databaseDir = path.resolve(__dirname, '..', '..', 'database');
-const sqliteDbFileName = process.env.SQLITE_DB_FILE || 'white_creams.sqlite';
-const sqliteDbFilePath = path.resolve(databaseDir, sqliteDbFileName);
+const defaultDatabaseDir = path.resolve(__dirname, '..', '..', 'database');
+const configuredDatabaseDir = process.env.SQLITE_DB_DIR || defaultDatabaseDir;
+const sqliteDbFileNameOrPath = process.env.SQLITE_DB_FILE || 'white_creams.sqlite';
+const sqliteDbFilePath = path.isAbsolute(sqliteDbFileNameOrPath)
+  ? sqliteDbFileNameOrPath
+  : path.resolve(configuredDatabaseDir, sqliteDbFileNameOrPath);
+const databaseDir = path.dirname(sqliteDbFilePath);
+const sqliteDbFileName = path.basename(sqliteDbFilePath);
 const backupsDir = path.resolve(databaseDir, 'backups');
 const weeklyAutomationCheckIntervalMs = 60 * 1000;
 const TEAM_HEIST_LIMIT_WINDOW_DAYS = 7;
@@ -20,6 +26,10 @@ const TEAM_HEIST_LIMIT_MAX = 2;
 const TEAM_HEIST_LIMIT_WINDOW_MS = TEAM_HEIST_LIMIT_WINDOW_DAYS * 24 * 60 * 60 * 1000;
 const TEAM_HEIST_LIMIT_TYPES = ['Armurie', 'Fleeca Bank'];
 const ARMURIE_WEAPONS = ['Lampe Torche', 'Club De Golf', 'Couteau', 'Pied de biche', 'Marteau'];
+const allowedOrigins = (process.env.CORS_ORIGIN || process.env.FRONTEND_URL || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 function hasColumn(tableName, columnName) {
   const columns = db.prepare(`PRAGMA table_info(${tableName})`).all();
@@ -692,7 +702,15 @@ function sanitizeBackupFileName(inputValue) {
   return fileName;
 }
 
-app.use(cors());
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+    callback(new Error('Not allowed by CORS'));
+  }
+}));
 app.use(express.json());
 
 // IMPORTANT: lien vers le frontend

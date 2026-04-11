@@ -1,15 +1,16 @@
 const fs = require('fs');
 const path = require('path');
 const Database = require('better-sqlite3');
+const dotenv = require('dotenv');
 
-const dbFilePath = path.resolve(
-  __dirname,
-  '..',
-  '..',
-  '..',
-  'database',
-  process.env.SQLITE_DB_FILE || 'white_creams.sqlite'
-);
+dotenv.config();
+
+const defaultDatabaseDir = path.resolve(__dirname, '..', '..', '..', 'database');
+const configuredDatabaseDir = process.env.SQLITE_DB_DIR || defaultDatabaseDir;
+const sqliteDbFileNameOrPath = process.env.SQLITE_DB_FILE || 'white_creams.sqlite';
+const dbFilePath = path.isAbsolute(sqliteDbFileNameOrPath)
+  ? sqliteDbFileNameOrPath
+  : path.resolve(configuredDatabaseDir, sqliteDbFileNameOrPath);
 
 const initSqlPath = path.resolve(
   __dirname,
@@ -20,6 +21,8 @@ const initSqlPath = path.resolve(
   'init',
   '001_schema.sql'
 );
+
+fs.mkdirSync(path.dirname(dbFilePath), { recursive: true });
 
 const db = new Database(dbFilePath);
 

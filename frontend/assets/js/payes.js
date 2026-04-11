@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = window.__API_BASE_URL__ || '';
 
 const authToken = localStorage.getItem('authToken');
 const authUserRaw = localStorage.getItem('authUser');

@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = window.__API_BASE_URL__ || '';
 
 const authToken = localStorage.getItem('authToken');
 const authUserRaw = localStorage.getItem('authUser');
@@ -46,7 +46,7 @@ const HEIST_COOLDOWNS = [
     {
         key: 'cambu',
         durationMs: 3 * 60 * 60 * 1000,
-        aliases: ['cambu', 'cambriolage'] 
+        aliases: ['cambu', 'cambriolage']
     },
     {
         key: 'superette',

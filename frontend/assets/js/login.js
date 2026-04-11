@@ -4,7 +4,7 @@ const passwordInput = document.getElementById('password');
 const loginButton = document.getElementById('loginButton');
 const message = document.getElementById('loginMessage');
 
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = window.__API_BASE_URL__ || '';
 
 function setMessage(text, type = 'default') {
     message.textContent = text;
