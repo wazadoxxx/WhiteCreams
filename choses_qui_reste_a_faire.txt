@@ -1,0 +1,5 @@
+Mettre le compteur sur les fleeca/ armurie ( on peut en faire que 2 max dans une semaine et ensuite faut attendre 7j)
+
+faire en sorte que dans les payes dans un tableau on voit un récapitulatif de chaque personnes aveec le total de dorgues vendu et le total casses 
+
+Corriger le salaire pour qu'il change en fonction de la part du groupe

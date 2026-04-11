@@ -1,0 +1,368 @@
+:root {
+    --text: #eef4ff;
+    --muted: #b7c4e6;
+    --panel: rgba(13, 18, 37, 0.72);
+    --panel-border: rgba(177, 195, 255, 0.3);
+    --accent: #6ee7ff;
+    --accent-2: #9cb1ff;
+    --danger: #ff8f98;
+    --shadow: 0 22px 46px rgba(4, 8, 22, 0.55);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    color: var(--text);
+    font-family: 'Manrope', 'Segoe UI', sans-serif;
+    background: url('../img/FiveM_b3570_GTAProcess_2026-03-30_04-55-16_283.png') center / cover no-repeat fixed;
+}
+
+.bg-overlay {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(rgba(5, 8, 21, 0.72), rgba(5, 8, 21, 0.72));
+    pointer-events: none;
+}
+
+.topbar,
+.page-shell,
+.modal {
+    position: relative;
+    z-index: 1;
+}
+
+.topbar {
+    width: min(1180px, calc(100% - 24px));
+    margin: 14px auto 0;
+    padding: 11px 14px;
+    border-radius: 16px;
+    background: rgba(11, 16, 34, 0.72);
+    border: 1px solid var(--panel-border);
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.brand-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: inherit;
+}
+
+.brand-logo {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    border: 1px solid var(--panel-border);
+    object-fit: cover;
+}
+
+.brand-name {
+    font-family: 'Bebas Neue', 'Trebuchet MS', sans-serif;
+    font-size: 1.9rem;
+    letter-spacing: 0.04em;
+}
+
+.menu {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.menu-link,
+.logout-button {
+    border: 1px solid transparent;
+    border-radius: 10px;
+    padding: 8px 12px;
+    background: transparent;
+    color: var(--text);
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.menu-link.is-active {
+    border-color: var(--panel-border);
+    background: rgba(110, 231, 255, 0.16);
+}
+
+.logout-button {
+    cursor: pointer;
+    background: linear-gradient(135deg, #ff9ab8, var(--danger));
+    color: #2c0910;
+}
+
+.page-shell {
+    width: min(1180px, calc(100% - 24px));
+    margin: 16px auto 28px;
+}
+
+.title-row {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.kicker {
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.74rem;
+    color: var(--accent);
+    font-weight: 800;
+}
+
+h1 {
+    margin: 6px 0 0;
+    font-family: 'Bebas Neue', 'Trebuchet MS', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    line-height: 1;
+}
+
+.actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.cooldown-grid {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.cooldown-card {
+    border: 1px solid var(--panel-border);
+    border-radius: 14px;
+    padding: 12px;
+    background: rgba(8, 12, 28, 0.84);
+    box-shadow: var(--shadow);
+}
+
+.cooldown-label {
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-weight: 800;
+}
+
+.cooldown-time {
+    margin: 8px 0 2px;
+    font-size: clamp(1.15rem, 2.4vw, 1.55rem);
+    font-weight: 800;
+    color: var(--accent);
+}
+
+.cooldown-note {
+    margin: 0;
+    font-size: 0.84rem;
+    color: var(--muted);
+}
+
+.cooldown-card.is-ready {
+    border-color: rgba(110, 231, 255, 0.64);
+    background: linear-gradient(135deg, rgba(11, 48, 56, 0.84), rgba(10, 20, 40, 0.9));
+}
+
+.cooldown-card.is-ready .cooldown-time {
+    color: #a8ffd7;
+}
+
+.action-btn {
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.action-btn.primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #021228;
+}
+
+.action-btn.secondary {
+    background: rgba(13, 18, 37, 0.75);
+    color: var(--text);
+}
+
+.table-card {
+    margin-top: 14px;
+    border: 1px solid var(--panel-border);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    background: var(--panel);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead {
+    background: rgba(7, 10, 24, 0.95);
+}
+
+th,
+td {
+    text-align: left;
+    padding: 14px 16px;
+}
+
+.row-action {
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    background: rgba(110, 231, 255, 0.16);
+    color: var(--text);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+tbody tr:nth-child(odd) {
+    background: rgba(19, 26, 54, 0.64);
+}
+
+tbody tr:nth-child(even) {
+    background: rgba(13, 18, 37, 0.76);
+}
+
+.modal {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: rgba(5, 8, 21, 0.72);
+    padding: 14px;
+}
+
+.hidden {
+    display: none;
+}
+
+.modal-panel {
+    width: min(470px, 100%);
+    border-radius: 16px;
+    border: 1px solid var(--panel-border);
+    background: rgba(10, 15, 33, 0.95);
+    box-shadow: var(--shadow);
+    padding: 18px;
+}
+
+.modal-panel h2 {
+    margin-top: 0;
+}
+
+.modal-form {
+    display: grid;
+    gap: 10px;
+}
+
+.modal-form label {
+    font-size: 0.92rem;
+    color: var(--muted);
+}
+
+.auto-date-note {
+    margin: 2px 0 0;
+    font-size: 0.86rem;
+    color: var(--muted);
+}
+
+.modal-form input,
+.modal-form select {
+    border: 1px solid var(--panel-border);
+    border-radius: 10px;
+    padding: 11px 12px;
+    background: rgba(8, 12, 28, 0.88);
+    color: var(--text);
+}
+
+.participants-group {
+    display: grid;
+    gap: 8px;
+}
+
+.participants-group.hidden {
+    display: none;
+}
+
+.participants-list {
+    min-height: 86px;
+    max-height: 180px;
+    overflow: auto;
+    border: 1px solid var(--panel-border);
+    border-radius: 10px;
+    padding: 10px;
+    background: rgba(8, 12, 28, 0.88);
+    display: grid;
+    gap: 8px;
+}
+
+.participant-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+}
+
+.participant-option input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.modal-actions .ghost,
+.modal-actions .primary {
+    border: 1px solid var(--panel-border);
+    border-radius: 10px;
+    padding: 9px 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.modal-actions .ghost {
+    background: transparent;
+    color: var(--text);
+}
+
+.modal-actions .primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #021228;
+}
+
+@media (max-width: 760px) {
+    .topbar {
+        position: relative;
+    }
+
+    .cooldown-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 460px) {
+    .cooldown-grid {
+        grid-template-columns: 1fr;
+    }
+}

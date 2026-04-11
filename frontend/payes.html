@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FlashBackFA | Payes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;700;800&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="assets/css/payes-dashboard.css" />
+</head>
+
+<body>
+    <div class="bg-overlay" aria-hidden="true"></div>
+
+    <header class="topbar">
+        <a href="index.html" class="brand-wrap" aria-label="FlashBackFA accueil">
+            <img src="assets/img/FlashBackFa.jpg" alt="Logo FlashBackFA" class="brand-logo" />
+            <span class="brand-name">FlashBackFA</span>
+        </a>
+
+        <nav class="menu" aria-label="Navigation principale">
+            <a href="index.html" class="menu-link">Accueil</a>
+            <a href="casses.html" class="menu-link">Casses</a>
+            <a href="casses-equipe.html" class="menu-link">Armurie/Fleeca</a>
+            <a href="payes.html" class="menu-link is-active">Payes</a>
+            <button id="logoutButton" class="logout-button" type="button">Deconnexion</button>
+        </nav>
+    </header>
+
+    <main class="page-shell">
+        <section class="title-row">
+            <p class="kicker">Gestion des payes</p>
+            <h1>Statistiques globales et salaires</h1>
+            <p class="subtitle">Calcul des salaires selon l'argent ramene par chaque membre pour le groupe.</p>
+        </section>
+
+        <section class="stats-grid" aria-label="Totaux globaux">
+            <article class="stat-card">
+                <p class="stat-label">Total casses</p>
+                <p class="stat-value" id="totalHeists">0</p>
+            </article>
+            <article class="stat-card">
+                <p class="stat-label">Total ventes drogues</p>
+                <p class="stat-value" id="totalDrugSales">0</p>
+            </article>
+            <article class="stat-card">
+                <p class="stat-label">Argent total groupe</p>
+                <p class="stat-value" id="totalMoney">0 $</p>
+            </article>
+        </section>
+
+        <section class="table-card" aria-label="Totaux par type de casse">
+            <div class="section-head">
+                <h2>Nombre total de chaque casse</h2>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Nombre</th>
+                        <th>Gain total</th>
+                    </tr>
+                </thead>
+                <tbody id="heistsByTypeBody"></tbody>
+            </table>
+        </section>
+
+        <section class="table-card" aria-label="Totaux par type de drogue">
+            <div class="section-head">
+                <h2>Nombre total de ventes de drogues</h2>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Type de drogue</th>
+                        <th>Ventes</th>
+                        <th>Quantite totale</th>
+                        <th>Revenu total</th>
+                    </tr>
+                </thead>
+                <tbody id="drugsByTypeBody"></tbody>
+            </table>
+        </section>
+
+        <section class="table-card" aria-label="Recapitulatif des activites par joueur">
+            <div class="section-head">
+                <h2>Recapitulatif par joueur</h2>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Joueur</th>
+                        <th>Total drogues vendues</th>
+                        <th>Total casses</th>
+                    </tr>
+                </thead>
+                <tbody id="playersRecapBody"></tbody>
+            </table>
+        </section>
+
+        <section class="table-card" aria-label="Salaires joueurs">
+            <div class="section-head salary-head">
+                <h2>Salaire par joueur</h2>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Joueur</th>
+                        <th>Argent apporte</th>
+                        <th>Argent apres blanchissement (%)</th>
+                        <th>Part du groupe</th>
+                        <th>Salaire</th>
+                    </tr>
+                </thead>
+                <tbody id="salaryBody"></tbody>
+            </table>
+        </section>
+
+        <section id="adminPanel" class="table-card hidden" aria-label="Gestion admin grades et pourcentages">
+            <div class="section-head">
+                <h2>Panneau Admin - Grades et pourcentages salaire</h2>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Joueur</th>
+                        <th>Grade</th>
+                        <th>% Blanchissement</th>
+                        <th>% Part du groupe</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="adminUsersBody"></tbody>
+            </table>
+
+            <div class="section-head admin-backup-head">
+                <h2>Sauvegardes hebdomadaires</h2>
+                <div class="admin-actions-wrap">
+                    <button id="resetAllActivityButton" class="admin-reset-all-btn" type="button">Tout remettre a
+                        zero</button>
+                    <button id="createBackupButton" class="admin-backup-btn" type="button">Creer une sauvegarde
+                        maintenant</button>
+                </div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fichier</th>
+                        <th>Rapport lisible</th>
+                        <th>Donnees JSON</th>
+                        <th>Date</th>
+                        <th>Taille</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="backupsBody"></tbody>
+            </table>
+        </section>
+    </main>
+
+    <script src="assets/js/payes-dashboard.js"></script>
+</body>
+
+</html>
