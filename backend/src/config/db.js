@@ -77,6 +77,8 @@ if (tableExists('users') && !hasColumn('users', 'group_share_percentage')) {
 if (tableExists('users')) {
   db.exec('UPDATE users SET grade = 5 WHERE grade IS NULL');
   db.exec('UPDATE users SET admin = 0 WHERE admin IS NULL');
+  db.exec("UPDATE users SET salary_percentage = NULL WHERE TRIM(CAST(salary_percentage AS TEXT)) = ''");
+  db.exec("UPDATE users SET group_share_percentage = NULL WHERE TRIM(CAST(group_share_percentage AS TEXT)) = ''");
 }
 
 // Keep backward compatibility if a previous DB version still uses heist_name.

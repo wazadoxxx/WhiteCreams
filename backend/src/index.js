@@ -211,6 +211,11 @@ function parseOptionalPercentage(value) {
   return parsedValue;
 }
 
+function normalizeStoredOptionalPercentage(value) {
+  const parsedValue = parseOptionalPercentage(value);
+  return Number.isNaN(parsedValue) ? null : parsedValue;
+}
+
 function ensureBackupsDirectory() {
   if (!fs.existsSync(backupsDir)) {
     fs.mkdirSync(backupsDir, { recursive: true });
@@ -1132,8 +1137,8 @@ app.get('/api/payes-summary', (req, res) => {
         id: item.id,
         pseudo: item.pseudo,
         isAdmin: Number(item.admin) === 1,
-        salaryPercentage: item.salary_percentage == null ? null : Number(item.salary_percentage),
-        groupSharePercentage: item.group_share_percentage == null ? null : Number(item.group_share_percentage),
+        salaryPercentage: normalizeStoredOptionalPercentage(item.salary_percentage),
+        groupSharePercentage: normalizeStoredOptionalPercentage(item.group_share_percentage),
         gradeName: item.grade_name || null,
         totalHeists: Number(item.total_heists || 0),
         totalHeistMoney: Number(item.total_heist_money || 0),
@@ -1180,8 +1185,8 @@ app.get('/api/admin/:pseudo/users-settings', (req, res) => {
         isAdmin: Number(item.admin) === 1,
         grade: item.grade,
         gradeName: item.grade_name || null,
-        salaryPercentage: item.salary_percentage == null ? null : Number(item.salary_percentage),
-        groupSharePercentage: item.group_share_percentage == null ? null : Number(item.group_share_percentage)
+        salaryPercentage: normalizeStoredOptionalPercentage(item.salary_percentage),
+        groupSharePercentage: normalizeStoredOptionalPercentage(item.group_share_percentage)
       }))
     });
   } catch (error) {

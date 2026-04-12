@@ -630,13 +630,16 @@ if (resetAllActivityButton) {
     });
 }
 
-loadPayesSummary().catch(() => {
-    renderHeistsByType([]);
-    renderDrugsByType([]);
-    renderPlayersRecap([]);
-    usersCache = [];
-    totalMoneyGeneratedCache = 0;
-    renderSalaries();
+loadPayesSummary().catch((error) => {
+    console.error('Erreur chargement payes:', error);
+
+    // Keep previous values when the API is temporarily unavailable (for example Render cold starts).
+    if (!usersCache.length) {
+        renderHeistsByType([]);
+        renderDrugsByType([]);
+        renderPlayersRecap([]);
+        renderSalaries();
+    }
 });
 
 loadAdminPanel().catch(() => {
