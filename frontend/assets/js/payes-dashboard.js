@@ -35,6 +35,47 @@ const adminCreateUserMessage = document.getElementById('adminCreateUserMessage')
 let usersCache = [];
 let totalMoneyGeneratedCache = 0;
 let gradesCache = [];
+const GRADE_ORDER_KEYS = ['leader', 'coleader', 'officier', 'membreconfirme', 'membre'];
+
+function toGradeKey(value) {
+    return String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '');
+}
+
+function getUserGradeName(user) {
+    if (user?.gradeName) {
+        return user.gradeName;
+    }
+
+    if (user?.grade == null) {
+        return '';
+    }
+
+    const matchedGrade = gradesCache.find((grade) => Number(grade.id) === Number(user.grade));
+    return matchedGrade?.name || '';
+}
+
+function getUserGradeRank(user) {
+    const gradeKey = toGradeKey(getUserGradeName(user));
+    const index = GRADE_ORDER_KEYS.indexOf(gradeKey);
+    return index === -1 ? Number.MAX_SAFE_INTEGER : index;
+}
+
+function sortUsersByGrade(users) {
+    return [...users].sort((left, right) => {
+        const rankDiff = getUserGradeRank(left) - getUserGradeRank(right);
+        if (rankDiff !== 0) {
+            return rankDiff;
+        }
+
+        return String(left?.pseudo || '').localeCompare(String(right?.pseudo || ''), 'fr', {
+            sensitivity: 'base'
+        });
+    });
+}
 
 function setAdminCreateUserMessage(text, type = 'default') {
     if (!adminCreateUserMessage) {
@@ -150,8 +191,9 @@ function renderPlayersRecap(rows) {
     }
 
     playersRecapBody.innerHTML = '';
+    const sortedRows = sortUsersByGrade(rows);
 
-    rows.forEach((user) => {
+    sortedRows.forEach((user) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${user.pseudo}</td>
@@ -170,8 +212,9 @@ function renderPlayersRecap(rows) {
 
 function renderSalaries() {
     salaryBody.innerHTML = '';
+    const sortedUsers = sortUsersByGrade(usersCache);
 
-    usersCache.forEach((user) => {
+    sortedUsers.forEach((user) => {
         const autoShare = totalMoneyGeneratedCache > 0 ? user.totalMoneyGenerated / totalMoneyGeneratedCache : 0;
         const configuredSharePercentage = user.groupSharePercentage == null ? null : Number(user.groupSharePercentage);
         const share = configuredSharePercentage == null ? autoShare : configuredSharePercentage / 100;
@@ -203,8 +246,9 @@ function renderSalaries() {
 
 function renderAdminUsers(users) {
     adminUsersBody.innerHTML = '';
+    const sortedUsers = sortUsersByGrade(users);
 
-    users.forEach((user) => {
+    sortedUsers.forEach((user) => {
         const tr = document.createElement('tr');
 
         const gradeOptions = gradesCache
@@ -240,7 +284,7 @@ function renderAdminUsers(users) {
         adminUsersBody.appendChild(tr);
     });
 
-    if (!users.length) {
+    if (!sortedUsers.length) {
         const tr = document.createElement('tr');
         tr.innerHTML = '<td colspan="5">Aucun utilisateur.</td>';
         adminUsersBody.appendChild(tr);

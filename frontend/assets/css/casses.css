@@ -283,6 +283,36 @@ tbody tr:nth-child(even) {
     color: var(--muted);
 }
 
+.admin-drug-manager {
+    border: 1px solid var(--panel-border);
+    border-radius: 10px;
+    padding: 10px;
+    background: rgba(8, 12, 28, 0.7);
+    display: grid;
+    gap: 8px;
+}
+
+.admin-drug-manager-title {
+    margin: 0;
+    font-size: 0.84rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--accent);
+}
+
+.admin-drug-manager-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+}
+
+.modal-actions .ghost.danger {
+    border-color: rgba(255, 143, 152, 0.55);
+    color: #ffd5d9;
+    background: rgba(130, 22, 34, 0.25);
+}
+
 .modal-form input,
 .modal-form select {
     border: 1px solid var(--panel-border);

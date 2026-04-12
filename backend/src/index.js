@@ -940,6 +940,68 @@ app.get('/api/casses-options', (req, res) => {
   }
 });
 
+app.post('/api/admin/:pseudo/drug-types', (req, res) => {
+  const adminPseudo = req.params.pseudo;
+  const rawName = req.body?.name;
+  const name = String(rawName || '').trim();
+
+  if (!isAdminPseudo(adminPseudo)) {
+    return res.status(403).json({ ok: false, error: 'Acces admin requis.' });
+  }
+
+  if (!name) {
+    return res.status(400).json({ ok: false, error: 'Nom de drogue requis.' });
+  }
+
+  try {
+    const existing = db
+      .prepare('SELECT name FROM drug_types WHERE LOWER(name) = LOWER(?) LIMIT 1')
+      .get(name);
+
+    if (existing) {
+      return res.status(409).json({ ok: false, error: 'Ce type de drogue existe deja.' });
+    }
+
+    db.prepare('INSERT INTO drug_types (name) VALUES (?)').run(name);
+    return res.status(201).json({ ok: true, drugType: { name } });
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: 'Erreur serveur pendant lajout de type de drogue.' });
+  }
+});
+
+app.delete('/api/admin/:pseudo/drug-types/:name', (req, res) => {
+  const adminPseudo = req.params.pseudo;
+  const name = String(req.params.name || '').trim();
+
+  if (!isAdminPseudo(adminPseudo)) {
+    return res.status(403).json({ ok: false, error: 'Acces admin requis.' });
+  }
+
+  if (!name) {
+    return res.status(400).json({ ok: false, error: 'Nom de drogue requis.' });
+  }
+
+  try {
+    const existing = db
+      .prepare('SELECT id, name FROM drug_types WHERE LOWER(name) = LOWER(?) LIMIT 1')
+      .get(name);
+
+    if (!existing) {
+      return res.status(404).json({ ok: false, error: 'Type de drogue introuvable.' });
+    }
+
+    const totalCount = db.prepare('SELECT COUNT(*) AS count FROM drug_types').get();
+    if (Number(totalCount?.count || 0) <= 1) {
+      return res.status(400).json({ ok: false, error: 'Impossible de supprimer le dernier type de drogue.' });
+    }
+
+    db.prepare('DELETE FROM drug_types WHERE id = ?').run(existing.id);
+    return res.status(200).json({ ok: true });
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: 'Erreur serveur pendant la suppression de type de drogue.' });
+  }
+});
+
 app.get('/api/team-heists', (req, res) => {
   try {
     const limitsByType = getAllTeamHeistLimitStatuses();

@@ -33,9 +33,15 @@ const editDrugIdInput = document.getElementById('editDrugId');
 const editDrugTypeSelect = document.getElementById('editDrugType');
 const editDrugQuantityInput = document.getElementById('editDrugQuantity');
 const editDrugRevenueInput = document.getElementById('editDrugRevenue');
+const adminDrugTypeManager = document.getElementById('adminDrugTypeManager');
+const adminDrugTypeNameInput = document.getElementById('adminDrugTypeName');
+const addDrugTypeButton = document.getElementById('addDrugTypeButton');
+const adminDrugTypeToDeleteSelect = document.getElementById('adminDrugTypeToDelete');
+const deleteDrugTypeButton = document.getElementById('deleteDrugTypeButton');
 
 let latestActivities = [];
 let cooldownState = [];
+let drugTypesCache = [];
 
 const HEIST_COOLDOWNS = [
     {
@@ -95,6 +101,40 @@ function fillSelect(select, values, placeholder) {
         }
         select.appendChild(option);
     });
+}
+
+function renderAdminDrugTypesDeleteSelect(values) {
+    if (!adminDrugTypeToDeleteSelect) {
+        return;
+    }
+
+    adminDrugTypeToDeleteSelect.innerHTML = '';
+
+    if (!values.length) {
+        const emptyOption = document.createElement('option');
+        emptyOption.value = '';
+        emptyOption.textContent = 'Aucune drogue disponible';
+        adminDrugTypeToDeleteSelect.appendChild(emptyOption);
+        return;
+    }
+
+    values.forEach((value, index) => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        if (index === 0) {
+            option.selected = true;
+        }
+        adminDrugTypeToDeleteSelect.appendChild(option);
+    });
+}
+
+function setDrugTypeManagerVisibility() {
+    if (!adminDrugTypeManager) {
+        return;
+    }
+
+    adminDrugTypeManager.classList.toggle('hidden', !connectedUser?.isAdmin);
 }
 
 function getNowIsoDateTime() {
@@ -304,8 +344,67 @@ async function loadSelectOptions() {
 
     fillSelect(heistTypeSelect, data.heistTypes || [], 'Aucun type de casse disponible');
     fillSelect(editHeistTypeSelect, data.heistTypes || [], 'Aucun type de casse disponible');
-    fillSelect(drugTypeSelect, data.drugTypes || [], 'Aucun type de drogue disponible');
-    fillSelect(editDrugTypeSelect, data.drugTypes || [], 'Aucun type de drogue disponible');
+    drugTypesCache = data.drugTypes || [];
+    fillSelect(drugTypeSelect, drugTypesCache, 'Aucun type de drogue disponible');
+    fillSelect(editDrugTypeSelect, drugTypesCache, 'Aucun type de drogue disponible');
+    renderAdminDrugTypesDeleteSelect(drugTypesCache);
+}
+
+async function addDrugType() {
+    if (!connectedUser?.isAdmin) {
+        throw new Error('Acces admin requis.');
+    }
+
+    const name = String(adminDrugTypeNameInput?.value || '').trim();
+    if (!name) {
+        throw new Error('Saisis un nom de drogue.');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/admin/${encodeURIComponent(connectedUser.pseudo)}/drug-types`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data.ok) {
+        throw new Error(data.error || 'Erreur ajout type de drogue');
+    }
+
+    if (adminDrugTypeNameInput) {
+        adminDrugTypeNameInput.value = '';
+    }
+
+    await loadSelectOptions();
+    drugTypeSelect.value = data.drugType?.name || name;
+    editDrugTypeSelect.value = data.drugType?.name || name;
+}
+
+async function deleteDrugType() {
+    if (!connectedUser?.isAdmin) {
+        throw new Error('Acces admin requis.');
+    }
+
+    const name = String(adminDrugTypeToDeleteSelect?.value || '').trim();
+    if (!name) {
+        throw new Error('Selectionne un type de drogue a supprimer.');
+    }
+
+    const shouldDelete = window.confirm(`Supprimer le type de drogue ${name} ?`);
+    if (!shouldDelete) {
+        return;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/admin/${encodeURIComponent(connectedUser.pseudo)}/drug-types/${encodeURIComponent(name)}`, {
+        method: 'DELETE'
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data.ok) {
+        throw new Error(data.error || 'Erreur suppression type de drogue');
+    }
+
+    await loadSelectOptions();
 }
 
 async function submitHeist(event) {
@@ -421,6 +520,7 @@ logoutButton.addEventListener('click', () => {
 });
 
 wireModalCloseButtons();
+setDrugTypeManagerVisibility();
 heistsTableBody.addEventListener('click', (event) => {
     const target = event.target;
 
@@ -439,6 +539,19 @@ heistsTableBody.addEventListener('click', (event) => {
         openEditModalForDrug(drugActivityId);
     }
 });
+
+if (addDrugTypeButton) {
+    addDrugTypeButton.addEventListener('click', () => {
+        addDrugType().catch((error) => alert(error.message));
+    });
+}
+
+if (deleteDrugTypeButton) {
+    deleteDrugTypeButton.addEventListener('click', () => {
+        deleteDrugType().catch((error) => alert(error.message));
+    });
+}
+
 playerNameEl.textContent = connectedUser.pseudo;
 setInterval(renderCooldowns, 1000);
 loadSelectOptions().catch(() => {

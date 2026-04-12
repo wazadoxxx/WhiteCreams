@@ -113,6 +113,21 @@
                     <option value="">Chargement...</option>
                 </select>
 
+                <div id="adminDrugTypeManager" class="admin-drug-manager hidden" aria-label="Gestion admin des drogues">
+                    <p class="admin-drug-manager-title">Gestion admin des types de drogues</p>
+                    <div class="admin-drug-manager-row">
+                        <input id="adminDrugTypeName" type="text" placeholder="Nouveau type (ex: Opium)" />
+                        <button id="addDrugTypeButton" type="button" class="ghost">Ajouter</button>
+                    </div>
+                    <div class="admin-drug-manager-row">
+                        <select id="adminDrugTypeToDelete">
+                            <option value="">Selectionne une drogue</option>
+                        </select>
+                        <button id="deleteDrugTypeButton" type="button" class="ghost danger">Supprimer</button>
+                    </div>
+                    <p class="auto-date-note">Visible uniquement pour les admins.</p>
+                </div>
+
                 <label for="drugQuantity">Quantite vendue</label>
                 <input id="drugQuantity" type="number" min="0" step="1" required />
 
