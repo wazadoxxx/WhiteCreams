@@ -195,6 +195,19 @@ function isAdminPseudo(pseudo) {
   return Boolean(user && Number(user.admin) === 1);
 }
 
+function parseOptionalPercentage(value) {
+  if (value === null || value === undefined || value === '') {
+    return null;
+  }
+
+  const parsedValue = Number(value);
+  if (!Number.isFinite(parsedValue) || parsedValue < 0 || parsedValue > 100) {
+    return NaN;
+  }
+
+  return parsedValue;
+}
+
 function ensureBackupsDirectory() {
   if (!fs.existsSync(backupsDir)) {
     fs.mkdirSync(backupsDir, { recursive: true });
@@ -1111,6 +1124,91 @@ app.get('/api/admin/:pseudo/users-settings', (req, res) => {
   }
 });
 
+app.post('/api/admin/:pseudo/users', (req, res) => {
+  const adminPseudo = req.params.pseudo;
+  const { pseudo, password, grade, isAdmin, salaryPercentage, groupSharePercentage } = req.body || {};
+
+  if (!isAdminPseudo(adminPseudo)) {
+    return res.status(403).json({ ok: false, error: 'Acces admin requis.' });
+  }
+
+  const trimmedPseudo = String(pseudo || '').trim();
+  const rawPassword = String(password || '');
+  const parsedGrade = Number(grade);
+  const parsedSalaryPercentage = parseOptionalPercentage(salaryPercentage);
+  const parsedGroupSharePercentage = parseOptionalPercentage(groupSharePercentage);
+
+  if (!trimmedPseudo) {
+    return res.status(400).json({ ok: false, error: 'Pseudo requis.' });
+  }
+
+  if (trimmedPseudo.length < 3) {
+    return res.status(400).json({ ok: false, error: 'Le pseudo doit contenir au moins 3 caracteres.' });
+  }
+
+  if (!rawPassword) {
+    return res.status(400).json({ ok: false, error: 'Mot de passe requis.' });
+  }
+
+  if (rawPassword.length < 6) {
+    return res.status(400).json({ ok: false, error: 'Le mot de passe doit contenir au moins 6 caracteres.' });
+  }
+
+  if (!Number.isFinite(parsedGrade) || parsedGrade <= 0) {
+    return res.status(400).json({ ok: false, error: 'Grade invalide.' });
+  }
+
+  if (Number.isNaN(parsedSalaryPercentage)) {
+    return res.status(400).json({ ok: false, error: 'Pourcentage salaire invalide (0-100).' });
+  }
+
+  if (Number.isNaN(parsedGroupSharePercentage)) {
+    return res.status(400).json({ ok: false, error: 'Part du groupe invalide (0-100).' });
+  }
+
+  try {
+    const gradeExists = db.prepare('SELECT id FROM grades WHERE id = ? LIMIT 1').get(parsedGrade);
+    if (!gradeExists) {
+      return res.status(400).json({ ok: false, error: 'Grade introuvable.' });
+    }
+
+    const existingUser = db.prepare('SELECT id FROM users WHERE pseudo = ? LIMIT 1').get(trimmedPseudo);
+    if (existingUser) {
+      return res.status(409).json({ ok: false, error: 'Ce pseudo existe deja.' });
+    }
+
+    const insertResult = db
+      .prepare(
+        `INSERT INTO users (pseudo, password, admin, salary_percentage, group_share_percentage, grade)
+         VALUES (?, ?, ?, ?, ?, ?)`
+      )
+      .run(
+        trimmedPseudo,
+        rawPassword,
+        isAdmin ? 1 : 0,
+        parsedSalaryPercentage,
+        parsedGroupSharePercentage,
+        parsedGrade
+      );
+
+    db.prepare('INSERT OR IGNORE INTO player_stats (user_id) VALUES (?)').run(insertResult.lastInsertRowid);
+
+    return res.status(201).json({
+      ok: true,
+      user: {
+        id: Number(insertResult.lastInsertRowid),
+        pseudo: trimmedPseudo,
+        isAdmin: Boolean(isAdmin),
+        grade: parsedGrade,
+        salaryPercentage: parsedSalaryPercentage,
+        groupSharePercentage: parsedGroupSharePercentage
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: 'Erreur serveur pendant la creation utilisateur.' });
+  }
+});
+
 app.put('/api/admin/:pseudo/users/:id/settings', (req, res) => {
   const adminPseudo = req.params.pseudo;
   const targetUserId = Number(req.params.id);
@@ -1163,6 +1261,51 @@ app.put('/api/admin/:pseudo/users/:id/settings', (req, res) => {
     return res.status(200).json({ ok: true });
   } catch (error) {
     return res.status(500).json({ ok: false, error: 'Erreur serveur pendant la mise a jour admin.' });
+  }
+});
+
+app.delete('/api/admin/:pseudo/users/:id', (req, res) => {
+  const adminPseudo = req.params.pseudo;
+  const targetUserId = Number(req.params.id);
+
+  if (!isAdminPseudo(adminPseudo)) {
+    return res.status(403).json({ ok: false, error: 'Acces admin requis.' });
+  }
+
+  if (!Number.isFinite(targetUserId) || targetUserId <= 0) {
+    return res.status(400).json({ ok: false, error: 'Identifiant utilisateur invalide.' });
+  }
+
+  try {
+    const targetUser = db.prepare('SELECT id, pseudo, admin FROM users WHERE id = ? LIMIT 1').get(targetUserId);
+    if (!targetUser) {
+      return res.status(404).json({ ok: false, error: 'Utilisateur introuvable.' });
+    }
+
+    if (targetUser.pseudo === adminPseudo) {
+      return res.status(400).json({ ok: false, error: 'Tu ne peux pas supprimer ton propre compte admin.' });
+    }
+
+    if (Number(targetUser.admin) === 1) {
+      const adminCount = db.prepare('SELECT COUNT(*) AS count FROM users WHERE admin = 1').get();
+      if (Number(adminCount?.count || 0) <= 1) {
+        return res.status(400).json({ ok: false, error: 'Impossible de supprimer le dernier administrateur.' });
+      }
+    }
+
+    const heistsDeleted = db.prepare('DELETE FROM heists_history WHERE user_id = ?').run(targetUserId).changes;
+    const drugSalesDeleted = db.prepare('DELETE FROM drug_sales_history WHERE user_id = ?').run(targetUserId).changes;
+    db.prepare('DELETE FROM player_stats WHERE user_id = ?').run(targetUserId);
+    db.prepare('DELETE FROM users WHERE id = ?').run(targetUserId);
+
+    return res.status(200).json({
+      ok: true,
+      deletedUser: targetUser.pseudo,
+      heistsDeleted,
+      drugSalesDeleted
+    });
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: 'Erreur serveur pendant la suppression utilisateur.' });
   }
 });
 

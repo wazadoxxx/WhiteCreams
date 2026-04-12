@@ -124,6 +124,26 @@
             <div class="section-head">
                 <h2>Panneau Admin - Grades et pourcentages salaire</h2>
             </div>
+
+            <div class="admin-create-wrap">
+                <h3>Creer un utilisateur</h3>
+                <form id="adminCreateUserForm" class="admin-create-form" novalidate>
+                    <input id="newUserPseudo" name="pseudo" type="text" placeholder="Pseudo" required />
+                    <input id="newUserPassword" name="password" type="password" placeholder="Mot de passe" required />
+                    <select id="newUserGrade" name="grade" required></select>
+                    <input id="newUserSalaryPercentage" name="salaryPercentage" type="number" min="0" max="100"
+                        step="0.01" placeholder="% blanchissement (auto)" />
+                    <input id="newUserGroupSharePercentage" name="groupSharePercentage" type="number" min="0" max="100"
+                        step="0.01" placeholder="% part groupe (auto)" />
+                    <label class="admin-create-checkbox" for="newUserIsAdmin">
+                        <input id="newUserIsAdmin" name="isAdmin" type="checkbox" />
+                        <span>Compte admin</span>
+                    </label>
+                    <button id="createUserButton" class="admin-backup-btn" type="submit">Creer l'utilisateur</button>
+                </form>
+                <p id="adminCreateUserMessage" class="admin-inline-message" aria-live="polite"></p>
+            </div>
+
             <table>
                 <thead>
                     <tr>

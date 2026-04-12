@@ -22,10 +22,46 @@ const adminUsersBody = document.getElementById('adminUsersBody');
 const backupsBody = document.getElementById('backupsBody');
 const createBackupButton = document.getElementById('createBackupButton');
 const resetAllActivityButton = document.getElementById('resetAllActivityButton');
+const adminCreateUserForm = document.getElementById('adminCreateUserForm');
+const newUserPseudoInput = document.getElementById('newUserPseudo');
+const newUserPasswordInput = document.getElementById('newUserPassword');
+const newUserGradeSelect = document.getElementById('newUserGrade');
+const newUserSalaryPercentageInput = document.getElementById('newUserSalaryPercentage');
+const newUserGroupSharePercentageInput = document.getElementById('newUserGroupSharePercentage');
+const newUserIsAdminInput = document.getElementById('newUserIsAdmin');
+const createUserButton = document.getElementById('createUserButton');
+const adminCreateUserMessage = document.getElementById('adminCreateUserMessage');
 
 let usersCache = [];
 let totalMoneyGeneratedCache = 0;
 let gradesCache = [];
+
+function setAdminCreateUserMessage(text, type = 'default') {
+    if (!adminCreateUserMessage) {
+        return;
+    }
+
+    adminCreateUserMessage.textContent = text;
+    adminCreateUserMessage.classList.remove('is-error', 'is-success');
+
+    if (type === 'error') {
+        adminCreateUserMessage.classList.add('is-error');
+    }
+
+    if (type === 'success') {
+        adminCreateUserMessage.classList.add('is-success');
+    }
+}
+
+function renderAdminCreateGradeOptions() {
+    if (!newUserGradeSelect) {
+        return;
+    }
+
+    newUserGradeSelect.innerHTML = gradesCache
+        .map((grade, index) => `<option value="${grade.id}" ${index === gradesCache.length - 1 ? 'selected' : ''}>${grade.name}</option>`)
+        .join('');
+}
 
 function formatMoney(value) {
     return new Intl.NumberFormat('fr-FR').format(Number(value || 0)) + ' $';
@@ -197,6 +233,7 @@ function renderAdminUsers(users) {
             <td>
                 <button class="admin-save-btn" data-user-id="${user.id}" type="button">Enregistrer</button>
                 <button class="admin-reset-btn" data-user-id="${user.id}" data-user-pseudo="${user.pseudo}" type="button">Remettre a zero</button>
+                <button class="admin-delete-btn" data-user-id="${user.id}" data-user-pseudo="${user.pseudo}" type="button">Supprimer</button>
             </td>
         `;
 
@@ -291,9 +328,74 @@ async function loadAdminPanel() {
     }
 
     gradesCache = data.grades || [];
+    renderAdminCreateGradeOptions();
     adminPanel.classList.remove('hidden');
     renderAdminUsers(data.users || []);
     await loadBackups();
+}
+
+async function createAdminUser() {
+    if (!connectedUser?.pseudo) {
+        return;
+    }
+
+    const pseudo = newUserPseudoInput?.value.trim() || '';
+    const password = newUserPasswordInput?.value || '';
+    const grade = newUserGradeSelect?.value || '';
+    const salaryPercentage = newUserSalaryPercentageInput?.value === '' ? null : Number(newUserSalaryPercentageInput.value);
+    const groupSharePercentage = newUserGroupSharePercentageInput?.value === '' ? null : Number(newUserGroupSharePercentageInput.value);
+    const isAdmin = Boolean(newUserIsAdminInput?.checked);
+
+    if (!pseudo || !password || !grade) {
+        setAdminCreateUserMessage('Pseudo, mot de passe et grade sont obligatoires.', 'error');
+        return;
+    }
+
+    createUserButton.disabled = true;
+    setAdminCreateUserMessage('Creation en cours...');
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/admin/${encodeURIComponent(connectedUser.pseudo)}/users`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                pseudo,
+                password,
+                grade: Number(grade),
+                salaryPercentage,
+                groupSharePercentage,
+                isAdmin
+            })
+        });
+
+        const data = await response.json();
+        if (!response.ok || !data.ok) {
+            throw new Error(data.error || 'Erreur creation utilisateur');
+        }
+
+        adminCreateUserForm.reset();
+        renderAdminCreateGradeOptions();
+        setAdminCreateUserMessage(`Utilisateur ${pseudo} cree avec succes.`, 'success');
+        await Promise.all([loadPayesSummary(), loadAdminPanel()]);
+    } catch (error) {
+        setAdminCreateUserMessage(error.message, 'error');
+    } finally {
+        createUserButton.disabled = false;
+    }
+}
+
+async function deleteAdminUser(userId, userPseudo) {
+    const response = await fetch(`${API_BASE_URL}/api/admin/${encodeURIComponent(connectedUser.pseudo)}/users/${userId}`, {
+        method: 'DELETE'
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data.ok) {
+        throw new Error(data.error || 'Erreur suppression utilisateur');
+    }
+
+    await Promise.all([loadPayesSummary(), loadAdminPanel()]);
+    alert(`Utilisateur ${userPseudo} supprime.`);
 }
 
 async function saveAdminUserSettings(userId) {
@@ -401,6 +503,18 @@ if (adminUsersBody) {
             return;
         }
 
+        if (target.classList.contains('admin-delete-btn')) {
+            const userPseudo = target.getAttribute('data-user-pseudo') || 'cet utilisateur';
+            const shouldDelete = window.confirm(`Confirmer la suppression definitive de ${userPseudo} ?`);
+
+            if (!shouldDelete) {
+                return;
+            }
+
+            deleteAdminUser(Number(userId), userPseudo).catch((error) => alert(error.message));
+            return;
+        }
+
         if (!target.classList.contains('admin-reset-btn')) {
             return;
         }
@@ -413,6 +527,13 @@ if (adminUsersBody) {
         }
 
         resetAdminUserActivity(Number(userId), userPseudo).catch((error) => alert(error.message));
+    });
+}
+
+if (adminCreateUserForm) {
+    adminCreateUserForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        createAdminUser();
     });
 }
 
