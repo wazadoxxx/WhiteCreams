@@ -200,7 +200,10 @@ function parseOptionalPercentage(value) {
     return null;
   }
 
-  const parsedValue = Number(value);
+  const normalizedValue = typeof value === 'string'
+    ? value.trim().replace(',', '.')
+    : value;
+  const parsedValue = Number(normalizedValue);
   if (!Number.isFinite(parsedValue) || parsedValue < 0 || parsedValue > 100) {
     return NaN;
   }
@@ -1289,20 +1292,14 @@ app.put('/api/admin/:pseudo/users/:id/settings', (req, res) => {
     return res.status(400).json({ ok: false, error: 'Grade invalide.' });
   }
 
-  let parsedPercentage = null;
-  if (salaryPercentage !== null && salaryPercentage !== undefined && salaryPercentage !== '') {
-    parsedPercentage = Number(salaryPercentage);
-    if (!Number.isFinite(parsedPercentage) || parsedPercentage < 0 || parsedPercentage > 100) {
-      return res.status(400).json({ ok: false, error: 'Pourcentage salaire invalide (0-100).' });
-    }
+  const parsedPercentage = parseOptionalPercentage(salaryPercentage);
+  if (Number.isNaN(parsedPercentage)) {
+    return res.status(400).json({ ok: false, error: 'Pourcentage salaire invalide (0-100).' });
   }
 
-  let parsedGroupSharePercentage = null;
-  if (groupSharePercentage !== null && groupSharePercentage !== undefined && groupSharePercentage !== '') {
-    parsedGroupSharePercentage = Number(groupSharePercentage);
-    if (!Number.isFinite(parsedGroupSharePercentage) || parsedGroupSharePercentage < 0 || parsedGroupSharePercentage > 100) {
-      return res.status(400).json({ ok: false, error: 'Part du groupe invalide (0-100).' });
-    }
+  const parsedGroupSharePercentage = parseOptionalPercentage(groupSharePercentage);
+  if (Number.isNaN(parsedGroupSharePercentage)) {
+    return res.status(400).json({ ok: false, error: 'Part du groupe invalide (0-100).' });
   }
 
   try {
@@ -1911,6 +1908,7 @@ app.get('/api/db-check', (req, res) => {
     return res.status(200).json({
       ok: true,
       database: 'sqlite',
+      sqliteFilePath: sqliteDbFilePath,
       totalUsers: result.totalUsers
     });
   } catch (error) {

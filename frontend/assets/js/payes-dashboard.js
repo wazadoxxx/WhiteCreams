@@ -94,6 +94,24 @@ function setAdminCreateUserMessage(text, type = 'default') {
     }
 }
 
+function parsePercentageInput(rawValue) {
+    if (rawValue === null || rawValue === undefined) {
+        return null;
+    }
+
+    const normalized = String(rawValue).trim().replace(',', '.');
+    if (normalized === '') {
+        return null;
+    }
+
+    const parsed = Number(normalized);
+    if (!Number.isFinite(parsed) || parsed < 0 || parsed > 100) {
+        return NaN;
+    }
+
+    return parsed;
+}
+
 function renderAdminCreateGradeOptions() {
     if (!newUserGradeSelect) {
         return;
@@ -386,12 +404,17 @@ async function createAdminUser() {
     const pseudo = newUserPseudoInput?.value.trim() || '';
     const password = newUserPasswordInput?.value || '';
     const grade = newUserGradeSelect?.value || '';
-    const salaryPercentage = newUserSalaryPercentageInput?.value === '' ? null : Number(newUserSalaryPercentageInput.value);
-    const groupSharePercentage = newUserGroupSharePercentageInput?.value === '' ? null : Number(newUserGroupSharePercentageInput.value);
+    const salaryPercentage = parsePercentageInput(newUserSalaryPercentageInput?.value);
+    const groupSharePercentage = parsePercentageInput(newUserGroupSharePercentageInput?.value);
     const isAdmin = Boolean(newUserIsAdminInput?.checked);
 
     if (!pseudo || !password || !grade) {
         setAdminCreateUserMessage('Pseudo, mot de passe et grade sont obligatoires.', 'error');
+        return;
+    }
+
+    if (Number.isNaN(salaryPercentage) || Number.isNaN(groupSharePercentage)) {
+        setAdminCreateUserMessage('Les pourcentages doivent etre des nombres entre 0 et 100.', 'error');
         return;
     }
 
@@ -451,10 +474,17 @@ async function saveAdminUserSettings(userId) {
         return;
     }
 
+    const parsedSalaryPercentage = parsePercentageInput(percentInput.value);
+    const parsedGroupSharePercentage = parsePercentageInput(shareInput.value);
+
+    if (Number.isNaN(parsedSalaryPercentage) || Number.isNaN(parsedGroupSharePercentage)) {
+        throw new Error('Les pourcentages doivent etre des nombres entre 0 et 100.');
+    }
+
     const payload = {
         grade: Number(gradeSelect.value),
-        salaryPercentage: percentInput.value === '' ? null : Number(percentInput.value),
-        groupSharePercentage: shareInput.value === '' ? null : Number(shareInput.value)
+        salaryPercentage: parsedSalaryPercentage,
+        groupSharePercentage: parsedGroupSharePercentage
     };
 
     const response = await fetch(`${API_BASE_URL}/api/admin/${encodeURIComponent(connectedUser.pseudo)}/users/${userId}/settings`, {
