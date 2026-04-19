@@ -21,6 +21,7 @@ const pgPool = db.pgPool;
 const databaseDir = path.dirname(sqliteDbFilePath);
 const sqliteDbFileName = path.basename(sqliteDbFilePath);
 const backupsDir = path.resolve(databaseDir, 'backups');
+const hasConfiguredSupabase = Boolean(db.hasConfiguredSupabase);
 const weeklyAutomationCheckIntervalMs = 60 * 1000;
 const TEAM_HEIST_LIMIT_WINDOW_DAYS = 7;
 const TEAM_HEIST_LIMIT_MAX = 2;
@@ -757,7 +758,7 @@ app.get('/api/player/:id', async (req, res) => {
   if (!pgPool) {
     return res.status(503).json({
       ok: false,
-      error: 'Connexion PostgreSQL non configuree.'
+      error: 'Connexion Supabase non configuree.'
     });
   }
 
@@ -800,7 +801,7 @@ app.get('/api/activities/:playerId', async (req, res) => {
   if (!pgPool) {
     return res.status(503).json({
       ok: false,
-      error: 'Connexion PostgreSQL non configuree.'
+      error: 'Connexion Supabase non configuree.'
     });
   }
 
@@ -853,7 +854,7 @@ app.post('/api/activity', async (req, res) => {
   if (!pgPool) {
     return res.status(503).json({
       ok: false,
-      error: 'Connexion PostgreSQL non configuree.'
+      error: 'Connexion Supabase non configuree.'
     });
   }
 
@@ -2045,13 +2046,13 @@ app.get('/api/db-check', async (req, res) => {
     const sqliteResult = db.prepare('SELECT COUNT(*) AS totalUsers FROM users').get();
     const response = {
       ok: true,
-      sqlite: {
+      legacySqlite: {
         enabled: true,
         filePath: sqliteDbFilePath,
         totalUsers: sqliteResult.totalUsers
       },
-      postgres: {
-        configured: db.hasConfiguredPostgres,
+      supabase: {
+        configured: hasConfiguredSupabase,
         connected: false,
         currentDatabase: null,
         currentUser: null,
@@ -2067,7 +2068,7 @@ app.get('/api/db-check', async (req, res) => {
         );
         const pgRow = pgResult.rows[0] || {};
 
-        response.postgres = {
+        response.supabase = {
           configured: true,
           connected: true,
           currentDatabase: pgRow.database_name || null,
@@ -2076,7 +2077,7 @@ app.get('/api/db-check', async (req, res) => {
           error: null
         };
       } catch (pgError) {
-        response.postgres = {
+        response.supabase = {
           configured: true,
           connected: false,
           currentDatabase: null,
