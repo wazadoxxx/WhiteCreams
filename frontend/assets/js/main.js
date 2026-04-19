@@ -87,6 +87,28 @@ function renderRecentHeists(heists) {
   }
 }
 
+async function loadPostgresPlayer() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/player/1`);
+    const data = await response.json();
+    const player = data?.player || data;
+
+    if (!response.ok || data?.ok === false || !player) {
+      return;
+    }
+
+    if (playerNameEl && player.name) {
+      playerNameEl.textContent = player.name;
+    }
+
+    if (totalMoneyEl && player.total_money != null) {
+      totalMoneyEl.textContent = formatMoney(Number(player.total_money) || 0);
+    }
+  } catch (error) {
+    // Keep the existing dashboard data when the PostgreSQL endpoint is unavailable.
+  }
+}
+
 async function loadDashboard() {
   renderIdentity(connectedUser);
 
@@ -125,9 +147,11 @@ async function loadDashboard() {
     }));
 
     renderRecentHeists(recentHeists);
+    await loadPostgresPlayer();
   } catch (error) {
     renderSummary({ totalMoney: 0, totalDrugsSold: 0, totalHeists: 0 });
     renderRecentHeists([]);
+    await loadPostgresPlayer();
   }
 }
 
