@@ -87,7 +87,7 @@ function renderRecentHeists(heists) {
   }
 }
 
-async function loadPostgresPlayer() {
+async function loadSupabasePlayer() {
   try {
     const response = await fetch(`${API_BASE_URL}/api/player/1`);
     const data = await response.json();
@@ -105,7 +105,7 @@ async function loadPostgresPlayer() {
       totalMoneyEl.textContent = formatMoney(Number(player.total_money) || 0);
     }
   } catch (error) {
-    // Keep the existing dashboard data when the PostgreSQL endpoint is unavailable.
+    // Keep the existing dashboard data when the Supabase-backed endpoint is unavailable.
   }
 }
 
@@ -147,11 +147,11 @@ async function loadDashboard() {
     }));
 
     renderRecentHeists(recentHeists);
-    await loadPostgresPlayer();
+    await loadSupabasePlayer();
   } catch (error) {
     renderSummary({ totalMoney: 0, totalDrugsSold: 0, totalHeists: 0 });
     renderRecentHeists([]);
-    await loadPostgresPlayer();
+    await loadSupabasePlayer();
   }
 }
 

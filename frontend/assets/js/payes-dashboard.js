@@ -633,7 +633,7 @@ if (resetAllActivityButton) {
 loadPayesSummary().catch((error) => {
     console.error('Erreur chargement payes:', error);
 
-    // Keep previous values when the API is temporarily unavailable (for example Render cold starts).
+    // Keep previous values when the API is temporarily unavailable.
     if (!usersCache.length) {
         renderHeistsByType([]);
         renderDrugsByType([]);
